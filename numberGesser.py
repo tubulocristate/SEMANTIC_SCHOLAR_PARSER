@@ -2,7 +2,7 @@
 
 import sys
 
-n = 100
+n = 2
 
 guess = 100
 last_bigger = 0
@@ -17,7 +17,9 @@ while True:
 print(last_bigger)
 lower, upper = guess, last_bigger
 while not (upper - lower) == 1:
-	if ((upper + lower) // 2) < n:
+	present = ((upper + lower) // 2) < n
+	print(present)
+	if present:
 		lower = (upper + lower) // 2
 	else:
 		upper = (upper + lower) // 2
