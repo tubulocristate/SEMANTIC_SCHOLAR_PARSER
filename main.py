@@ -66,6 +66,13 @@ def getDataFromPage(browser):
 		title = article.find_element(By.CSS_SELECTOR, "a > h2 > span").text
 		link = article.find_element(By.CSS_SELECTOR, "a.link-button--show-visited").get_attribute("href")
 		abstract = article.find_elements(By.CSS_SELECTOR, "div.cl-paper-abstract > span.full-abstract > *:not(button)")
+		authors = article.find_elements(By.CSS_SELECTOR, "span.cl-paper-authors")
+		authors_names = ""
+		for author in authors:
+			names = author.find_elements(By.CSS_SELECTOR, "span[data-heap-id=heap_author_list_item]")
+			for name in names:
+				authors_names += name.text + ", "
+			authors_names = authors_names.strip()[:-1]
 		if len(abstract) == 0:
 			abstract = article.find_elements(By.CSS_SELECTOR, "div > div > div > span")
 			if len(abstract) != 0:
@@ -76,7 +83,7 @@ def getDataFromPage(browser):
 			abstract_text = ""
 			for element in abstract:
 				abstract_text += " " + element.text
-		data.append((title, abstract_text, link))
+		data.append((title, authors_names, abstract_text, link))
 	return data
 
 
@@ -125,10 +132,12 @@ def main(save_file, prompt_file, mode, max_pages):
 
 	csv_file = open(save_file, "w")
 	contentWriter = csv.writer(csv_file)
-	contentWriter.writerow(["TITLE", "ABSTRACT", "LINK"])
+	contentWriter.writerow(["TITLE", "AUTHORS NAMES", "ABSTRACT", "LINK"])
 	
 	# Initialize web driver and enter search page
-	browser = webdriver.Chrome()
+	options = webdriver.ChromeOptions()
+	options.add_argument("headless")
+	browser = webdriver.Chrome(options=options)
 	browser.get(search_url)
 
 	# Calculate number of pages to parse
@@ -140,8 +149,8 @@ def main(save_file, prompt_file, mode, max_pages):
 		browser.get(search_url + f"&page={page_number}")
 		data = getDataFromPage(browser)
 		logger.info(f"Number of parsed articles from page {page_number} is {len(data)}")
-		for title, abstract, url in data:
-			contentWriter.writerow([title, abstract, url])
+		for title, authors_names, abstract, url in data:
+			contentWriter.writerow([title, authors_names, abstract, url])
 		logger.info(f"Page {page_number} written!")
 	
 	csv_file.close()
